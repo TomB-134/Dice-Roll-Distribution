@@ -13,8 +13,8 @@ public class Main extends Application {
 
     private BarChart distribution;
 
-    private int numOfRolls = 10000;
-    private int diceNum = 24;
+    private int numOfRolls = 1000;
+    private int diceNum = 2;
     private int[] data;
 
     @Override
@@ -26,7 +26,7 @@ public class Main extends Application {
         root.setAlignment(Pos.CENTER);
         root.getChildren().add(distribution);
 
-        Scene scene = new Scene(root);
+        Scene scene = new Scene(root, 800, 500);
 
         window.setTitle("Dice Roll Distribution");
         window.setScene(scene);
@@ -59,7 +59,7 @@ public class Main extends Application {
         XYChart.Series dataSeries = new XYChart.Series();
 
         for (int i = 0; i < data.length; i++) {
-            dataSeries.getData().add(new XYChart.Data<>("" + i, data[i]));
+            dataSeries.getData().add(new XYChart.Data<>("" + (i + 1), data[i]));
         }
 
         distribution = new BarChart<>(xAxis, yAxis);
