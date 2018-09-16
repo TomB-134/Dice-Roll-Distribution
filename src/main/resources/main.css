@@ -1,0 +1,7 @@
+.root {
+    -fx-background-color: #f2f2f0;
+}
+
+.chart-bar {
+    -fx-bar-fill: #836c9f;
+}

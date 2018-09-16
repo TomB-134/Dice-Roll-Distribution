@@ -14,6 +14,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+
 import static java.util.concurrent.ThreadLocalRandom.current;
 
 /**
@@ -86,6 +87,7 @@ public class Main extends Application {
         root.getChildren().addAll(controls);
 
         Scene scene = new Scene(root, 800, 500);
+        scene.getStylesheets().add("main.css");
 
         window.setTitle("Dice Roll Distribution");
         window.setResizable(false);
@@ -111,11 +113,11 @@ public class Main extends Application {
             dataSeries.getData().add(new XYChart.Data<>("" + (i + 1), data[i]));
         }
 
-        BarChart distribution = new BarChart<>(xAxis, yAxis);
-        distribution.getData().add(dataSeries);
+        BarChart barChart = new BarChart<>(xAxis, yAxis);
+        barChart.getData().add(dataSeries);
 
-        root.getChildren().add(0, distribution);
-        this.distribution = distribution;
+        root.getChildren().add(0, barChart);
+        this.distribution = barChart;
 
     }
 
