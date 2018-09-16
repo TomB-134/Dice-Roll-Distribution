@@ -1,57 +1,92 @@
 import javafx.application.Application;
+import javafx.concurrent.Task;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Button;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * @author Thomas Baum
+ */
+@SuppressWarnings("unchecked")
 public class Main extends Application {
-
+    private Task rollDiceWorker;
+    private ProgressBar rollDiceProgress;
     private BarChart distribution;
-
-    private int numOfRolls = 1000;
-    private int diceNum = 2;
+    private VBox root;
     private int[] data;
 
     @Override
     public void start(Stage window) {
-        rollDice();
+        root = new VBox(5);
+        root.setAlignment(Pos.CENTER);
+
+        rollDiceWorker = rollDiceWorker(2, 1000);
+        new Thread(rollDiceWorker).start();
+
         drawGraph();
 
-        VBox root = new VBox();
-        root.setAlignment(Pos.CENTER);
-        root.getChildren().add(distribution);
+        //Controls
+        rollDiceProgress = new ProgressBar(0);
 
-        Scene scene = new Scene(root, 800, 500);
+        TextField diceCountTextField = new TextField("2");
+        diceCountTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d")) {
+                diceCountTextField.setText(newValue.replaceAll("[^\\d]", ""));
+            }
+        });
 
-        window.setTitle("Dice Roll Distribution");
+        TextField rollCountTextField = new TextField("1000");
+        rollCountTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d")) {
+                rollCountTextField.setText(newValue.replaceAll("[^\\d]", ""));
+            }
+        });
+
+        Button roll = new Button("Roll");
+        roll.setOnAction(event -> {
+            rollDiceWorker = rollDiceWorker(Integer.parseInt(diceCountTextField.getText()),
+                    Integer.parseInt(rollCountTextField.getText()));
+
+            rollDiceProgress.progressProperty().unbind();
+            rollDiceProgress.progressProperty().bind(rollDiceWorker.progressProperty());
+
+            new Thread(rollDiceWorker).start();
+
+            rollDiceWorker.setOnSucceeded(event1 -> {
+                rollDiceProgress.progressProperty().unbind();
+                rollDiceProgress.setProgress(0);
+                drawGraph();
+            });
+        });
+
+        HBox controls = new HBox(5);
+        controls.setAlignment(Pos.CENTER);
+        controls.getChildren().addAll(diceCountTextField, rollCountTextField, roll, rollDiceProgress);
+
+        root.getChildren().addAll(controls);
+
+        Scene scene = new Scene(root);
+
         window.setScene(scene);
         window.show();
     }
 
-    private void rollDice() {
-        data = new int[diceNum * 6];
-
-        for (int i = 0; i < numOfRolls; i++) {
-            int total = 0;
-            for (int j = 0; j < diceNum; j++) {
-                total += ThreadLocalRandom.current().nextInt(1, 7);
-            }
-
-            System.out.println(total);
-            data[total - 1] += 1;
-        }
-
-    }
-
-    @SuppressWarnings("unchecked")
     private void drawGraph() {
+        root.getChildren().remove(distribution);
+
         CategoryAxis xAxis = new CategoryAxis();
-        xAxis.setLabel("Roll Result");
+        xAxis.setLabel("Roll Results");
 
         NumberAxis yAxis = new NumberAxis();
         yAxis.setLabel("Frequency");
@@ -62,12 +97,35 @@ public class Main extends Application {
             dataSeries.getData().add(new XYChart.Data<>("" + (i + 1), data[i]));
         }
 
-        distribution = new BarChart<>(xAxis, yAxis);
+        BarChart distribution = new BarChart<>(xAxis, yAxis);
         distribution.getData().add(dataSeries);
+
+        root.getChildren().add(0, distribution);
+        this.distribution = distribution;
+
+    }
+
+    private Task rollDiceWorker(int diceCount, int rollCount) {
+        return new Task() {
+            @Override
+            protected Object call() throws Exception {
+                data = new int[diceCount * 6];
+                for (int i = 0; i < rollCount; i++) {
+                    int total = 0;
+                    for (int j = 0; j < diceCount; j++) {
+                        total += ThreadLocalRandom.current().nextInt(1, 7);
+                    }
+
+                    data[total - 1] += 1;
+
+                    updateProgress(i + 1, rollCount);
+                }
+                return true;
+            }
+        };
     }
 
     public static void main(String[] args) {
         launch(args);
     }
-
 }
