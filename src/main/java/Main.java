@@ -1,6 +1,7 @@
 //Imports
 import javafx.application.Application;
 import javafx.concurrent.Task;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
@@ -33,6 +34,7 @@ public class Main extends Application {
     public void start(Stage window) { //Method that handles GUI stuff.
         root = new VBox(5);
         root.setAlignment(Pos.CENTER);
+        root.setPadding(new Insets(10, 10, 10, 10));
 
         rollDiceWorker = rollDiceWorker(2, 1000);
         new Thread(rollDiceWorker).start();
@@ -83,9 +85,10 @@ public class Main extends Application {
 
         root.getChildren().addAll(controls);
 
-        Scene scene = new Scene(root);
+        Scene scene = new Scene(root, 800, 500);
 
         window.setTitle("Dice Roll Distribution");
+        window.setResizable(false);
         window.setScene(scene);
         window.show();
     }
